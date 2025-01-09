@@ -28,7 +28,7 @@ namespace WebApplication1
                 var responce = context.Response;
                 var request = context.Request;
                 var path = request.Path;
-
+                User consumer = new User();//новый пользователь
                 string expForGuid = @"^/api/users/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$";
                 if (path == "/api/users" && request.Method == "GET")
                 {
@@ -41,7 +41,7 @@ namespace WebApplication1
                 }
                 else if (path == "/api/users" && request.Method == "PUT")
                 {
-                    UpdateUser(responce, request);
+                    UpdateUser(responce, request, consumer);
                 }
                 else if (Regex.IsMatch(path, expForGuid) && request.Method == "Delete")
                 {
@@ -54,7 +54,7 @@ namespace WebApplication1
                     await responce.SendFileAsync("html/index.html");
                 }
             });
-			app.Run();
+            app.Run();
 
             /*
              Results.File();
@@ -62,23 +62,27 @@ namespace WebApplication1
             Results.Stream();
              */
         }
-		static IQueryable<User> GetAllPeople(HttpResponse httpResponse) { return users.AsQueryable(); }
-		static User GetUser(string? identifier, HttpResponse httpResponse) { return users.FirstOrDefault(x => x.Id == identifier)!; }//поиск пользователя
-		static bool UpdateUser(HttpResponse httpResponse, HttpRequest httpRequest) { return IsRen(); }
+        static IQueryable<User> GetAllPeople(HttpResponse httpResponse) { return users.AsQueryable(); }
+        static User GetUser(string? identifier, HttpResponse httpResponse) { return users.FirstOrDefault(x => x.Id == identifier)!; }//поиск пользователя
+        static User? UpdateUser(HttpResponse httpResponse, HttpRequest httpRequest, User updUs)
+        {
+            User? user = users.FirstOrDefault(customer => customer.Id == updUs.Id);//пользователь
+            if (user == null) return null;
+            user.Id = updUs.Id;//обновление идентификатора
+            user.Name = updUs.Name;//обновление имени
+            user.Email = updUs.Email;//обновление электронной почты
+            return user;
+        }
 		static bool DeleteUser(string? identifier, HttpResponse response)
 		{
 			User user = GetUser(identifier, response);//поиск пользователя
             users.Remove(user);
-			return IsRen();
-		}
-        static bool IsRen()
-        {
-            bool isRefr;
+			bool isRefr;
 			if (users == defUs) isRefr = false;//если список по умолчанию совпадает с обновленным списком, то значение равно 0
-            else isRefr = true;//если обновленный список отличается от списка по умолчанию, значени равно 1
-            defUs = users;//обновление списка по умолчанию
-            return isRefr;
-        }
+			else isRefr = true;//если обновленный список отличается от списка по умолчанию, значени равно 1
+			defUs = users;//обновление списка по умолчанию
+			return isRefr;
+		}
 	}
 
     public class User
